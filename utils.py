@@ -5,6 +5,53 @@ import numpy as np
 """
 Define task metrics, loss functions and model trainer here.
 """
+@torch.jit.script
+def dice_loss(inputs, labels):
+    """Compute the DICE loss, similar to generalized IOU for masks.
+
+    Parameters
+    ----------
+    inputs : Tensor
+        The predictions for each example.
+    labels : Tensor
+        A float tensor with the same shape as inputs. Stores the binary classification label
+        for each element in inputs (0 for the negative class and 1 for the positive class).
+
+    Returns
+    -------
+    Tensor
+        Single-element loss tensor
+    """
+    inputs = inputs.sigmoid()
+    numerator = 2 * (inputs * labels).sum(-1)
+    denominator = inputs.sum(-1) + labels.sum(-1)
+    loss = 1 - (numerator + 1) / (denominator + 1)
+    return loss.sum() / len(inputs)
+
+
+@torch.jit.script
+def mask_ce_loss(inputs, labels):
+    """Computes cross entropy loss for masks.
+
+    Parameters
+    ----------
+    inputs: Tensor
+            A float tensor of arbitrary shape representing the predictions for each example.
+    labels: Tensor
+        A float tensor with the same shape as inputs. Stores the binary classification label
+        for each element in inputs (0 for the negative class and 1 for the positive class).
+
+    Returns
+    -------
+    Tensor
+        Single-element loss tensor
+    """
+    loss = F.binary_cross_entropy_with_logits(inputs, labels, reduction="none")
+    # find the mean loss for each mask
+    loss = loss.mean(1)
+
+    # take the average over all masks
+    return loss.sum() / len(inputs)
 
 
 def count_parameters(model):
