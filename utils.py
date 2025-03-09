@@ -78,54 +78,6 @@ def model_fit(x_pred, x_output, task_type):
 
     return loss
 
-# Legacy: compute mIoU and Acc. for each image and average across all images.
-
-# def compute_miou(x_pred, x_output):
-#     _, x_pred_label = torch.max(x_pred, dim=1)
-#     x_output_label = x_output
-#     batch_size = x_pred.size(0)
-#     class_nb = x_pred.size(1)
-#     device = x_pred.device
-#     for i in range(batch_size):
-#         true_class = 0
-#         first_switch = True
-#         invalid_mask = (x_output[i] >= 0).float()
-#         for j in range(class_nb):
-#             pred_mask = torch.eq(x_pred_label[i], j * torch.ones(x_pred_label[i].shape).long().to(device))
-#             true_mask = torch.eq(x_output_label[i], j * torch.ones(x_output_label[i].shape).long().to(device))
-#             mask_comb = pred_mask.float() + true_mask.float()
-#             union = torch.sum((mask_comb > 0).float() * invalid_mask)  # remove non-defined pixel predictions
-#             intsec = torch.sum((mask_comb > 1).float())
-#             if union == 0:
-#                 continue
-#             if first_switch:
-#                 class_prob = intsec / union
-#                 first_switch = False
-#             else:
-#                 class_prob = intsec / union + class_prob
-#             true_class += 1
-#         if i == 0:
-#             batch_avg = class_prob / true_class
-#         else:
-#             batch_avg = class_prob / true_class + batch_avg
-#     return batch_avg / batch_size
-#
-#
-# def compute_iou(x_pred, x_output):
-#     _, x_pred_label = torch.max(x_pred, dim=1)
-#     x_output_label = x_output
-#     batch_size = x_pred.size(0)
-#     for i in range(batch_size):
-#         if i == 0:
-#             pixel_acc = torch.div(
-#                 torch.sum(torch.eq(x_pred_label[i], x_output_label[i]).float()),
-#                 torch.sum((x_output_label[i] >= 0).float()))
-#         else:
-#             pixel_acc = pixel_acc + torch.div(
-#                 torch.sum(torch.eq(x_pred_label[i], x_output_label[i]).float()),
-#                 torch.sum((x_output_label[i] >= 0).float()))
-#     return pixel_acc / batch_size
-
 
 # New mIoU and Acc. formula: accumulate every pixel and average across all pixels in all images
 class ConfMatrix(object):
